@@ -1,0 +1,13 @@
+# SOL AI Assistant
+
+SOL is my personal AI assistant.
+
+## Features
+- Voice commands
+- Spoken responses
+- Multiple language support
+- AI conversations
+- Android app support
+
+## Goal
+Build a personal AI assistant inspired by JARVIS
