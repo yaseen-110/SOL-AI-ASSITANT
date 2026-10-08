@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOL AI Assistant</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#07111f;
+  color:#eaf6ff;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+}
+.app{
+  width:100%;
+  max-width:520px;
+  min-height:100vh;
+  padding:24px 18px;
+  display:flex;
+  flex-direction:column;
+}
+header{text-align:center;padding:12px}
+h1{letter-spacing:8px;color:#48eaff;margin-bottom:6px}
+.subtitle{color:#91a9c0;font-size:13px}
+.orb{
+  width:135px;height:135px;border-radius:50%;
+  margin:25px auto;
+  background:radial-gradient(circle,#b8ffff 0%,#36c8ff 22%,#1554a8 55%,#07111f 72%);
+  box-shadow:0 0 35px #16bfff80,0 0 80px #1260b955;
+  animation:pulse 3s infinite ease-in-out;
+}
+@keyframes pulse{50%{transform:scale(1.06);box-shadow:0 0 55px #16bfffaa}}
+.status{text-align:center;color:#48eaff;font-size:14px;margin-bottom:18px}
+#chat{
+  flex:1;min-height:180px;max-height:42vh;overflow-y:auto;
+  border:1px solid #1b3d57;border-radius:15px;
+  padding:12px;background:#0b1b2b;
+}
+.msg{padding:10px 12px;margin:8px 0;border-radius:12px;line-height:1.45;overflow-wrap:anywhere}
+.user{background:#164b70;text-align:right}
+.bot{background:#142c3e}
+.controls{display:flex;gap:8px;margin-top:12px}
+input{
+  flex:1;min-width:0;padding:13px;border-radius:12px;
+  border:1px solid #28516c;background:#102337;color:white;font-size:15px
+}
+button{
+  border:0;border-radius:12px;padding:12px;
+  background:#36cfff;color:#061321;font-weight:bold;cursor:pointer
+}
+.mic{width:100%;margin-top:10px;background:#17364d;color:#dffaff}
+.note{font-size:11px;color:#8199ad;text-align:center;margin-top:15px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>SOL</h1>
+    <div class="subtitle">YOUR PERSONAL AI COMPANION</div>
+  </header>
+
+  <div class="orb"></div>
+  <div class="status" id="status">SOL SYSTEM ONLINE</div>
+  <div id="chat" aria-live="polite">
+    <div class="msg bot">Hello! I'm SOL. You can type a message or use your microphone. How can I help you?</div>
+  </div>
+
+  <div class="controls">
+    <input id="message" placeholder="Talk to SOL..." autocomplete="off">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+  <button class="mic" onclick="listen()">🎙️ Speak to SOL</button>
+  <div class="note">Voice recognition requires browser support and microphone permission.</div>
+</div>
+
+<script>
+const chat=document.getElementById('chat');
+const input=document.getElementById('message');
+const statusText=document.getElementById('status');
+
+function addMessage(text,who){
+  const div=document.createElement('div');
+  div.className='msg '+who;
+  div.textContent=text;
+  chat.appendChild(div);
+  chat.scrollTop=chat.scrollHeight;
+}
+
+function reply(text){
+  addMessage(text,'bot');
+  if('speechSynthesis' in window){
+    speechSynthesis.cancel();
+    const speech=new SpeechSynthesisUtterance(text);
+    speech.lang='en-US';
+    speechSynthesis.speak(speech);
+  }
+}
+
+function sendMessage(){
+  const text=input.value.trim();
+  if(!text)return;
+  addMessage(text,'user');
+  input.value='';
+  const t=text.toLowerCase();
+  let answer;
+
+  if(/\b(hello|hi|hey|salam|assalam)\b/.test(t)){
+    answer='Hello! I am SOL. How are you today?';
+  }else if(t.includes('your name')){
+    answer='My name is SOL, your personal assistant.';
+  }else if(t.includes('time')){
+    answer='The time on this device is '+new Date().toLocaleTimeString()+'.';
+  }else if(t.includes('date')){
+    answer='Today is '+new Date().toLocaleDateString()+'.';
+  }else if(t.includes('who made you')||t.includes('who created you')){
+    answer='I am the SOL assistant project you are building.';
+  }else if(t.includes('thank')){
+    answer='You are welcome! I am happy to help.';
+  }else if(t.includes('how are you')){
+    answer='I am ready to help you. What would you like to do?';
+  }else if(t.includes('help')){
+    answer='You can greet me, ask for the time or date, or try the microphone button.';
+  }else{
+    answer='I received your message. Full AI conversations need an AI service to be connected to SOL.';
+  }
+  reply(answer);
+}
+
+input.addEventListener('keydown',e=>{
+  if(e.key==='Enter')sendMessage();
+});
+
+function listen(){
+  const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!Recognition){
+    statusText.textContent='VOICE INPUT NOT SUPPORTED IN THIS BROWSER';
+    reply('Voice recognition is not supported here. Please try a compatible browser.');
+    return;
+  }
+  const recognition=new Recognition();
+  recognition.lang='en-US';
+  recognition.interimResults=false;
+  recognition.onstart=()=>statusText.textContent='LISTENING...';
+  recognition.onresult=e=>{
+    input.value=e.results[0][0].transcript;
+    sendMessage();
+  };
+  recognition.onerror=()=>{
+    statusText.textContent='MICROPHONE UNAVAILABLE';
+  };
+  recognition.onend=()=>statusText.textContent='SOL SYSTEM ONLINE';
+  recognition.start();
+}
+</script>
+</body>
+</html>
